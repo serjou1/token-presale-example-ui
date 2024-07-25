@@ -7,7 +7,6 @@ const erc20abi = [{ "inputs": [{ "internalType": "string", "name": "name", "type
 const contractAddress = "0x644f32A5a0aBb5f4d62D3773cdd560fD2f2D39dE";
 
 document.getElementById("connect-button").addEventListener("click", async () => {
-    console.log("watafak");
 
     if (typeof window.ethereum !== 'undefined') {
         try {
@@ -35,6 +34,17 @@ document.getElementById("connect-button").addEventListener("click", async () => 
     const userTokensAmountNative = await contract.s_investemetByAddress(signer.address);
     const userTokensAmount = ethers.formatEther(userTokensAmountNative);
     document.getElementById("balance").innerText = userTokensAmount;
+
+    document.getElementById("connected").innerText = `Connected as ${signer.address}`;
+
+    const balanceNative = await provider.getBalance(contractAddress);
+    const balance = ethers.formatEther(balanceNative);
+    document.getElementById("total-native").innerText = `Total ETH balance ${balance}`;
+
+    const usdt = new ethers.Contract("0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0", erc20abi, signer);
+    const usdtBalanceNative = await usdt.balanceOf(contractAddress);
+    const usdtBalance = ethers.formatUnits(usdtBalanceNative, 6);
+    document.getElementById("total-usdt").innerHTML = `Total USDT balance ${usdtBalance};`
 });
 
 
@@ -53,10 +63,21 @@ document.getElementById("buy-with-native").addEventListener("click", async () =>
 
     const contract = new ethers.Contract(contractAddress, abi, signer);
 
+    const paused = await contract.paused();
+    if (paused) {
+        alert("token presale is PAUSED!!!")
+        return;
+    }
+
     console.log("calling buy method");
 
     const tx = await contract.buyTokensNative({ value: amount });
+
+    document.getElementById("working-panel").disabled = true;
     await tx.wait();
+    document.getElementById("working-panel").disabled = false;
+
+    alert("bought")
 
     console.log("called");
 
@@ -85,17 +106,29 @@ document.getElementById("buy-with-usdt").addEventListener("click", async () => {
 
     const usdt = new ethers.Contract("0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0", erc20abi, signer);
 
+    const paused = await contract.paused();
+    if (paused) {
+        alert("token presale is PAUSED!!!")
+        return;
+    }
+
     const allowance = await usdt.allowance(signer.address, contractAddress);
 
     console.log(allowance, amount);
 
     if (allowance < amount) {
         const approveTx = await usdt.approve(contractAddress, amount);
+        document.getElementById("working-panel").disabled = true;
         await approveTx.wait();
+        document.getElementById("working-panel").disabled = false;
     }
 
     const tx = await contract.buyTokensUSDT(amount);
+    document.getElementById("working-panel").disabled = true;
     await tx.wait();
+    document.getElementById("working-panel").disabled = false;
+
+    alert("bought")
 
     console.log("called");
 
@@ -104,3 +137,108 @@ document.getElementById("buy-with-usdt").addEventListener("click", async () => {
     document.getElementById("balance").innerText = userTokensAmount;
 });
 
+document.getElementById("pause").addEventListener("click", async () => {
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+
+    const contract = new ethers.Contract(contractAddress, abi, signer);
+
+    const tx = await contract.pause();
+    document.getElementById("working-panel").disabled = true;
+    await tx.wait();
+    document.getElementById("working-panel").disabled = false;
+
+    alert("contract paused!")
+});
+
+document.getElementById("unpause").addEventListener("click", async () => {
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+
+    const contract = new ethers.Contract(contractAddress, abi, signer);
+
+    const tx = await contract.unpause();
+    document.getElementById("working-panel").disabled = true;
+    await tx.wait();
+    document.getElementById("working-panel").disabled = false;
+
+    alert("contract unpaused!")
+});
+
+document.getElementById("withdraw-native").addEventListener("click", async () => {
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+
+    const contract = new ethers.Contract(contractAddress, abi, signer);
+
+    const all = document.getElementById("native-all").checked
+
+    if (all) {
+        const balance = await provider.getBalance(contract);
+
+        const tx = await contract.withdrawNative(balance);
+
+        document.getElementById("working-panel").disabled = true;
+        await tx.wait();
+        document.getElementById("working-panel").disabled = false;
+    } else {
+        const amountStr = document.getElementById("native-amount").value;
+
+        const amount = ethers.parseEther(amountStr);
+
+        const tx = await contract.withdrawNative(amount);
+
+        document.getElementById("working-panel").disabled = true;
+        await tx.wait();
+        document.getElementById("working-panel").disabled = false;
+    }
+
+    alert("native currency witdrawed");
+
+
+    const balanceNative = await provider.getBalance(contractAddress);
+    const balance = ethers.formatEther(balanceNative);
+    document.getElementById("total-native").innerText = `Total ETH balance ${balance}`;
+});
+
+document.getElementById("withdraw-usdt").addEventListener("click", async () => {
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+
+    const contract = new ethers.Contract(contractAddress, abi, signer);
+
+    const all = document.getElementById("usdt-all").checked
+
+    if (all) {
+        const usdt = new ethers.Contract("0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0", erc20abi, signer);
+
+        const balance = await usdt.balanceOf(contractAddress);
+
+        const tx = await contract.withdrawUSDT(balance);
+
+        document.getElementById("working-panel").disabled = true;
+        await tx.wait();
+        document.getElementById("working-panel").disabled = false;
+    } else {
+        const amountStr = document.getElementById("usdt-amount").value;
+
+        const amount = ethers.parseUnits(amountStr, 6);
+
+        const tx = await contract.withdrawUSDT(amount);
+
+        document.getElementById("working-panel").disabled = true;
+        await tx.wait();
+        document.getElementById("working-panel").disabled = false;
+    }
+
+    alert("usdt witdrawed");
+
+    const usdt = new ethers.Contract("0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0", erc20abi, signer);
+    const usdtBalanceNative = await usdt.balanceOf(contractAddress);
+    const usdtBalance = ethers.formatUnits(usdtBalanceNative, 6);
+    document.getElementById("total-usdt").innerHTML = `Total USDT balance ${usdtBalance};`
+});

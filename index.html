@@ -6,20 +6,42 @@
     <title>Metamask Connection</title>
 </head>
 <body>
-    <button id="connect-button">Connect</button>
-
-    <p>Token price </p>
-    <p id="token-price"></p>
-    <p> USD</p>
-
-    <input id="buy-with-native-input" />
-    <button id="buy-with-native">Buy with native</button>
-
-    <input id="buy-with-usdt-input" />
-    <button id="buy-with-usdt">Buy with USDT</button>
-
-    <p>Your balance:</p>
-    <p id="balance"></p>
+    <fieldset id="working-panel">
+        <button id="connect-button">Connect</button>
+        <p id="connected"></p>
+    
+        <p>Token price </p>
+        <p id="token-price"></p>
+        <p> USD</p>
+    
+        <input id="buy-with-native-input" />
+        <button id="buy-with-native">Buy with native</button>
+    
+        <input id="buy-with-usdt-input" />
+        <button id="buy-with-usdt">Buy with USDT</button>
+    
+        <p>Your balance:</p>
+        <p id="balance"></p>
+    
+    
+        <h3>Owner part</h3>
+        <button id="pause">Pause</button>
+        <button id="unpause">Unpause</button>
+        <p id="total-native"></p>
+        <p id="total-usdt"></p>
+        <input id="native-amount" />
+        <input id="native-all" type="checkbox"/>
+        <label for="native-all">Withdraw All</label>
+        <button id="withdraw-native">Withdraw native</button>
+        <p></p>
+        <input id="usdt-amount" />
+        <input id="usdt-all" type="checkbox"/>
+        <label for="usdt-all">Withdraw All</label>
+        <button id="withdraw-usdt">Withdraw USDT</button>
+    </div>
+    
     <script src="./index.js" type="module"></script>
 </body>
+
+
 </html>
